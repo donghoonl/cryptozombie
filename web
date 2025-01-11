@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>실시간 빗썸 시세 (USDT, USDC, BTC, DOGE)</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 2em;
+      background: #f3f3f3;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 1em;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .coin {
+      border-bottom: 1px solid #ddd;
+      padding: 1em 0;
+    }
+    .coin:last-child {
+      border-bottom: none;
+    }
+    .coin-title {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .price {
+      font-size: 1.8em;
+      margin: 0.5em 0;
+      color: #333;
+    }
+    .timestamp {
+      font-size: 0.9em;
+      color: #666;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 2em;
+      color: #999;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>실시간 빗썸 시세</h1>
+  <div class="container">
+    <!-- USDT -->
+    <div class="coin">
+      <div class="coin-title">USDT (테더)</div>
+      <div class="price" id="price-usdt">-</div>
+      <div class="timestamp" id="timestamp-usdt">-</div>
+    </div>
+    <!-- USDC -->
+    <div class="coin">
+      <div class="coin-title">USDC (USD 코인)</div>
+      <div class="price" id="price-usdc">-</div>
+      <div class="timestamp" id="timestamp-usdc">-</div>
+    </div>
+    <!-- BTC -->
+    <div class="coin">
+      <div class="coin-title">BTC (비트코인)</div>
+      <div class="price" id="price-btc">-</div>
+      <div class="timestamp" id="timestamp-btc">-</div>
+    </div>
+    <!-- DOGE -->
+    <div class="coin">
+      <div class="coin-title">DOGE (도지코인)</div>
+      <div class="price" id="price-doge">-</div>
+      <div class="timestamp" id="timestamp-doge">-</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>데이터 출처: <a href="https://api.bithumb.com" target="_blank" rel="noopener noreferrer">빗썸 API</a></p>
+  </div>
+
+  <script>
+    // 빗썸 API는 코인별로 다음과 같은 형태의 엔드포인트를 제공합니다.
+    // 예) https://api.bithumb.com/public/ticker/USDT_KRW
+    const coins = ['USDT', 'USDC', 'BTC', 'DOGE'];
+
+    // 코인별 HTML 요소 ID에 대응
+    // coinIdMap = {
+    //   "USDT": "usdt",
+    //   "USDC": "usdc",
+    //   "BTC": "btc",
+    //   "DOGE": "doge"
+    // };
+    // 동적으로 ID를 구성하기 때문에 굳이 객체를 쓰지 않고
+    // 단순히 소문자 이름으로 치환하여 이용해도 무방합니다.
+
+    async function fetchPrices() {
+      for (const coin of coins) {
+        const url = `https://api.bithumb.com/public/ticker/${coin}_KRW`;
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          
+          if (data.status === '0000') {
+            // 종가(closing_price)를 사용
+            const price = data.data.closing_price;
+            // ID 요소에 데이터를 표시 (소문자로 치환)
+            document.getElementById(`price-${coin.toLowerCase()}`).textContent 
+              = `₩ ${Number(price).toLocaleString()}`;
+            document.getElementById(`timestamp-${coin.toLowerCase()}`).textContent 
+              = `업데이트 시각: ${new Date().toLocaleTimeString()}`;
+          } else {
+            document.getElementById(`price-${coin.toLowerCase()}`).textContent 
+              = '데이터 불러오기 에러';
+          }
+        } catch (error) {
+          console.error(error);
+          document.getElementById(`price-${coin.toLowerCase()}`).textContent 
+            = '서버 접속 실패';
+        }
+      }
+    }
+
+    // 페이지 로드시 즉시 한 번 실행
+    fetchPrices();
+
+    // 5초마다 전체 코인 가격 갱신
+    setInterval(fetchPrices, 5000);
+  </script>
+</body>
+</html>
